@@ -1,0 +1,95 @@
+# ─── Node / Expo / React Native ───────────────────────────────
+node_modules/
+.expo/
+.expo-shared/
+dist/
+build/
+web-build/
+.expo-dev/
+
+# EAS Build cache
+.eas/
+
+# Metro bundler cache
+.expo/web/cache/
+.expo/packager-cache/
+.expo/metro-cache/
+
+# ─── TypeScript / Babel / Temp ────────────────────────────────
+*.tsbuildinfo
+*.log
+*.tmp
+*.temp
+*.cache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── Environment Variables ────────────────────────────────────
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
+
+# ─── iOS / Xcode ──────────────────────────────────────────────
+ios/build/
+ios/Pods/
+ios/DerivedData/
+ios/*.xcworkspace
+ios/*.xcuserstate
+ios/Podfile.lock
+ios/ExpoGo.xcworkspace/
+
+# ─── Android / Gradle ─────────────────────────────────────────
+android/.gradle/
+android/app/build/
+android/local.properties
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/gradle/
+android/.idea/
+android/*.iml
+
+# ─── macOS / Windows / System ─────────────────────────────────
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+$RECYCLE.BIN/
+
+# ─── VS Code / JetBrains IDEs ─────────────────────────────────
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# ─── Testing / Coverage / Reports ─────────────────────────────
+coverage/
+*.lcov
+jest-cache/
+jest-results.json
+
+# ─── Build Artifacts / Bundles ────────────────────────────────
+*.apk
+*.aab
+*.ipa
+*.app
+*.xcarchive
+*.keystore
+*.jks
+
+# ─── Miscellaneous ────────────────────────────────────────────
+*.orig
+*.rej
+*.bak
+*.swp
+*.swo
+*.out
+*.log
+*.lock
+yarn.lock
+package-lock.json
+.pnp.*
