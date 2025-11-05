@@ -92,4 +92,5 @@ jest-results.json
 *.lock
 yarn.lock
 package-lock.json
+firebase-service-account.json
 .pnp.*
