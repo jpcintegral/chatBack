@@ -82,11 +82,11 @@ async function sendPushNotification(token, title, body,linkKey) {
       // ---- Firebase FCM ----
       const message = {
         token,
-        notification: {
-          title,
-           body: 'Hola, tienes un mensaje',
-        },
-        data: { mensaje:  JSON.stringify(messageData)},
+         data: {
+          mensaje: JSON.stringify(messageData),
+          title: 'Hola, tienes un mensaje',    
+          body: messageData.text,      
+        }        
       };
 
       const response = await admin.messaging().send(message);
