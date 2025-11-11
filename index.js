@@ -83,7 +83,6 @@ async function sendPushNotification(token, title, body,linkKey) {
       const message = {
         token,
         notification: {
-          mensaje: JSON.stringify(messageData),
           title: 'Hola, tienes un mensaje',    
           body: messageData.text,      
         } ,
