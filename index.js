@@ -16,7 +16,7 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log('✅ Conectado a MongoDB'))
+  .then(() => console.log('Conectado a MongoDB'))
   .catch((err) => console.error(' Error al conectar a MongoDB:', err));
 
 // 🔹 Esquema y modelo genérico
@@ -40,12 +40,13 @@ const io = new Server(server, {
 
 // 🔹 Historial en memoria (temporal)
 const chatHistory = {}; // { linkKey: [mensajes...] }
+const onlineUsers = {}; 
 
 // 🔹 Función auxiliar para enviar notificación
 async function sendPushNotification(token, title, body,linkKey) {
   try {
     if (!token) {
-      console.log('⚠️ No se proporcionó token');
+      console.log(' No se proporcionó token');
       return;
     }
     console.log("token enviado:",token);
@@ -77,7 +78,7 @@ async function sendPushNotification(token, title, body,linkKey) {
       });
 
       const data = await response.json();
-      console.log('📨 Notificación (Expo):', data);
+      console.log(' Notificación (Expo):', data);
     } else {
       // ---- Firebase FCM ----
       const message = {
@@ -103,7 +104,7 @@ async function sendPushNotification(token, title, body,linkKey) {
 
 /*async function sendPushNotification(expoPushToken, title, body) {
   if (!expoPushToken || !expoPushToken.startsWith('ExponentPushToken')) {
-    console.log('⚠️ Token inválido o ausente:', expoPushToken);
+    console.log(' Token inválido o ausente:', expoPushToken);
     return;
   }
 
@@ -127,7 +128,7 @@ async function sendPushNotification(token, title, body,linkKey) {
     });
 
     const data = await response.json();
-    console.log('📨 Notificación enviada:', data);
+    console.log(' Notificación enviada:', data);
   } catch (error) {
     console.error('Error al enviar push:', error);
   }
@@ -149,17 +150,17 @@ app.post('/api/register-token', async (req, res) => {
       existing.linkKey = linkKey;
       existing.updatedAt = new Date();
       await existing.save();
-      console.log(`🔁 Token actualizado para ${userId}`);
+      console.log(` Token actualizado para ${userId}`);
     } else {
       await TokenModel.create({ userId, token ,linkKey});
-      console.log(`🆕 Token registrado para ${userId}`);
+      console.log(` Token registrado para ${userId}`);
     }
     */
     await TokenModel.create({ userId, token ,linkKey});
-      console.log(`🆕 Token registrado para ${userId}`);
+      console.log(` Token registrado para ${userId}`);
     res.json({ success: true });
   } catch (err) {
-    console.error('❌ Error al registrar token:', err);
+    console.error(' Error al registrar token:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -174,9 +175,9 @@ app.post('/api/send-notification', async (req, res) => {
 
   try {
     await sendPushNotification(token, title, body,linkkey);
-    res.json({ message: '✅ Notificación enviada correctamente' });
+    res.json({ message: ' Notificación enviada correctamente' });
   } catch (error) {
-    console.error('❌ Error al enviar notificación:', error);
+    console.error(' Error al enviar notificación:', error);
     res.status(500).json({ message: 'Error al enviar notificación', error });
   }
 });
@@ -187,7 +188,13 @@ io.on('connection', (socket) => {
 
   socket.on('joinChat', (linkKey) => {
     socket.join(linkKey);
-    console.log(`💬 ${socket.id} se unió a la sala ${linkKey}`);
+    console.log(` ${socket.id} se unió a la sala ${linkKey}`);
+    
+    // Guardar usuario como conectado
+    onlineUsers[linkKey] = socket.id;
+    // Emitir actualización de estado a todos
+    io.emit('userStatus', { linkKey, status: 'online' });
+
 
     if (chatHistory[linkKey]) {
       socket.emit('chatHistory', chatHistory[linkKey]);
@@ -197,7 +204,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('sendMessage', async ({ linkKey, message, to }) => {
-    console.log('📨 Mensaje recibido:', message, 'para:', to);
+    console.log(' Mensaje recibido:', message, 'para:', to);
 
     if (!chatHistory[linkKey]) chatHistory[linkKey] = [];
     chatHistory[linkKey].push(message);
@@ -219,21 +226,28 @@ io.on('connection', (socket) => {
                 console.log("Enviando notificación a token:", recipient_.token);
                 await sendPushNotification(
                   recipient_.token,
-                  'Nuevo mensaje  privado💬',
+                  'Nuevo mensaje  privado',
                   message,
                   linkKey
                 );
           }
       } else {
-        console.log(`⚠️ No hay token registrado para ${to}`);
+        console.log(` No hay token registrado para ${to}`);
       }
     } catch (error) {
-      console.error('❌ Error al enviar notificación:', error);
+      console.error(' Error al enviar notificación:', error);
     }
   });
 
   socket.on('disconnect', () => {
-    console.log('🔌 Cliente desconectado:', socket.id);
+     const userEntry = Object.entries(onlineUsers).find(([_, id]) => id === socket.id);
+    if (userEntry) {
+      const [linkKey] = userEntry;
+      delete onlineUsers[linkKey];
+      io.emit('userStatus', { linkKey, status: 'offline' });
+      console.log(` ${linkKey} (${socket.id}) desconectado`);
+    }
+    console.log(' Cliente desconectado:', socket.id);
   });
 });
 
@@ -245,5 +259,5 @@ app.get('/', (req, res) => {
 // 🔹 Iniciar servidor
 const PORT = 3100;
 server.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+  console.log(` Servidor corriendo en http://localhost:${PORT}`);
 });
