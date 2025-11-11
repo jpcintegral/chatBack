@@ -82,6 +82,11 @@ async function sendPushNotification(token, title, body,linkKey) {
       // ---- Firebase FCM ----
       const message = {
         token,
+        notification: {
+          mensaje: JSON.stringify(messageData),
+          title: 'Hola, tienes un mensaje',    
+          body: messageData.text,      
+        } ,
          data: {
           mensaje: JSON.stringify(messageData),
           title: 'Hola, tienes un mensaje',    
@@ -90,10 +95,10 @@ async function sendPushNotification(token, title, body,linkKey) {
       };
 
       const response = await admin.messaging().send(message);
-      console.log('✅ Notificación (FCM):', response);
+      console.log(' Notificación (FCM):', response);
     }
   } catch (error) {
-    console.error('❌ Error al enviar notificación:', error);
+    console.error(' Error al enviar notificación:', error);
   }
 }
 
