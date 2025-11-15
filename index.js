@@ -13,8 +13,8 @@ admin.initializeApp({
 
 // 🔹 Conexión MongoDB
 mongoose
-  //.connect('mongodb://104.192.5.79:27017/chat_tokens', {
-  .connect("mongodb://localhost/chat_tokens", {
+  .connect("mongodb://104.192.5.79:27017/chat_tokens", {
+    //.connect("mongodb://localhost/chat_tokens", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
