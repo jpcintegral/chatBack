@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -12,5 +13,9 @@
     "mongoose": "^8.19.2",
     "node-fetch": "^2.7.0",
     "socket.io": "^4.7.2"
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4"
   }
 }
