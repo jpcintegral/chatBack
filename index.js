@@ -228,8 +228,11 @@ io.on("connection", (socket) => {
         .lean();
 
       // 🔒 Solo devolver mensajes donde el usuario participe
-      const filtered = messages.filter(
+      /*const filtered = messages.filter(
         (msg) => msg.sender === userId || msg.to === userId
+      );*/
+      const filtered = messages.filter(
+        (msg) => msg.linkKey === linkKey || msg.to === userId
       );
       console.log("Mensajes filtrados:", filtered.length);
       socket.emit("chatHistoryResponse", {
