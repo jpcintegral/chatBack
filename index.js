@@ -266,6 +266,31 @@ io.on("connection", (socket) => {
     }
   });
 
+  // --- Delete multiple messages ---
+  socket.on("deleteMessages", async ({ linkKey, messageIds }) => {
+    try {
+      console.log(" Eliminando mensajes:", messageIds);
+
+      if (!linkKey || !Array.isArray(messageIds) || messageIds.length === 0) {
+        console.warn(" Parámetros inválidos en deleteMessages");
+        return;
+      }
+
+      // 👉 Eliminar de MongoDB
+      const result = await ChatMessage.deleteMany({
+        linkKey: linkKey,
+        id: { $in: messageIds },
+      });
+
+      console.log(` Mensajes eliminados en MongoDB: ${result.deletedCount}`);
+
+      // 👉 Notificar a todos los usuarios conectados en ese chat
+      io.to(linkKey).emit("messagesDeleted", { messageIds });
+    } catch (error) {
+      console.error(" Error eliminando mensajes:", error);
+    }
+  });
+
   socket.on("disconnect", () => {
     const userEntry = Object.entries(onlineUsers).find(
       ([_, id]) => id === socket.id
