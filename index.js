@@ -43,6 +43,7 @@ const io = new Server(server, {
 // 🔹 Historial en memoria (temporal)
 const chatHistory = {}; // { linkKey: [mensajes...] }
 const onlineUsers = {};
+const activeChatUsers = {}; // { linkKey: Set(deviceIds) }
 
 // 🔹 Función auxiliar para enviar notificación
 async function sendPushNotification(token, title, body, linkKey) {
@@ -144,25 +145,33 @@ app.post("/api/send-notification", async (req, res) => {
 io.on("connection", (socket) => {
   console.log("🔹 Cliente conectado:", socket.id);
 
-  socket.on("joinChat", (linkKey) => {
-    socket.join(linkKey);
-    console.log(` ${socket.id} se unió a la sala ${linkKey}`);
-
-    // Guardar usuario como conectado
-    onlineUsers[linkKey] = socket.id;
-    // Emitir actualización de estado a todos
-    io.emit("userStatus", { linkKey, status: "online" });
-
-    if (chatHistory[linkKey]) {
-      socket.emit("chatHistory", chatHistory[linkKey]);
-    } else {
-      chatHistory[linkKey] = [];
+  socket.on("joinChat", ({ linkKey, deviceId }) => {
+    if (!linkKey || !deviceId) {
+      return;
     }
+    socket.join(linkKey);
+    socket.currentChat = linkKey;
+    socket.deviceId = deviceId;
+    if (!activeChatUsers[linkKey]) {
+      activeChatUsers[linkKey] = new Set();
+    }
+
+    activeChatUsers[linkKey].add(deviceId);
+    console.log("Usuarios", activeChatUsers);
+    io.to(linkKey).emit("activeUsers", [...activeChatUsers[linkKey]]);
   });
 
+  // ---------------------------------------------
+  //  El usuario se une a su sala personal
+  // ---------------------------------------------
   socket.on("joinUser", (userId) => {
-    socket.join(`user_${userId}`);
-    console.log(`🟢 Usuario ${userId} unido a sala global user_${userId}`);
+    socket.userId = userId;
+    onlineUsers[userId] = true;
+    socket.join(`${userId}`);
+    console.log(`Usuario ${userId} conectado`);
+
+    //io.emit("userStatus", { userId, status: "online" });
+    io.emit("userStatus", onlineUsers);
   });
 
   socket.on("sendMessage", async ({ linkKey, message, sender, to }) => {
@@ -291,16 +300,34 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("disconnect", () => {
-    const userEntry = Object.entries(onlineUsers).find(
-      ([_, id]) => id === socket.id
-    );
-    if (userEntry) {
-      const [linkKey] = userEntry;
-      delete onlineUsers[linkKey];
-      io.emit("userStatus", { linkKey, status: "offline" });
-      console.log(` ${linkKey} (${socket.id}) desconectado`);
+  socket.on("requestContactDeviceId", async ({ linkKey, myDeviceId }) => {
+    const otherUser = await TokenModel.findOne({
+      linkKey,
+      userId: { $ne: myDeviceId },
+    });
+    // console.log("otherUser:", otherUser);
+    if (otherUser) {
+      socket.emit("contactDeviceId", {
+        deviceId: otherUser.userId,
+        linkKey: linkKey,
+      });
     }
+  });
+
+  socket.on("disconnect", () => {
+    if (socket.userId) {
+      console.log(" Usuario desconectado:", socket.userId);
+      onlineUsers[socket.userId] = false;
+      io.emit("userStatus", onlineUsers);
+      console.log(`Usuario ${socket.userId} desconectado`);
+    }
+
+    if (socket.currentChat && socket.userId) {
+      const linkKey = socket.currentChat;
+      activeChatUsers[linkKey]?.delete(socket.deviceId);
+      io.to(linkKey).emit("activeUsers", [...activeChatUsers[linkKey]]);
+    }
+
     console.log(" Cliente desconectado:", socket.id);
   });
 });
